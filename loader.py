@@ -7,11 +7,14 @@ import random as rd
 import tweepy as tpy
 from urllib import request, error
 
-from api_key import *
+from api_key import KEY1, KEY2
 
 
-auth = tpy.OAuthHandler(API_KEY, API_KEY_SECRET)
-auth.set_access_token(ACCESS_TOKEN, ACCESS_TOKEN_SECRET)
+K = KEY1
+
+
+auth = tpy.OAuthHandler(K.API_KEY, K.API_KEY_SECRET)
+auth.set_access_token(K.ACCESS_TOKEN, K.ACCESS_TOKEN_SECRET)
 
 API = tpy.API(auth)
 
@@ -26,6 +29,7 @@ def get_media_list_by_name(user_name):
 
     feeds = {
         "user_id": user_id,
+        # "screen_name": user_name,
         "exclude_replies": True,
         "include_rts": False,
     }
@@ -40,10 +44,11 @@ def get_media_list_by_name(user_name):
         with open(save_path, 'r') as f:
             preload_lines = f.readlines()
 
-        last_id = preload_lines[0].split()[0]
-        feeds['since_id'] = last_id
-        print('n_preload:', len(preload_lines))
-        print('start from id:', last_id)
+        if preload_lines:
+            last_id = preload_lines[0].split()[0]
+            feeds['since_id'] = last_id
+            print('n_preload:', len(preload_lines))
+            print('start from id:', last_id)
 
     else:
         preload = False
@@ -53,7 +58,10 @@ def get_media_list_by_name(user_name):
 
     all_medias = []
     cnt = 0
-    for tweet in tpy.Cursor(API.user_timeline, **feeds).items():
+    tweets = API.user_timeline(screen_name=user_name, count=200, include_rts=False)
+    for tweet in tweets:
+    # for tweet in tpy.Cursor(API.user_timeline, **feeds).items():
+        print(cnt, tweet.created_at, tweet.id_str)
         tweet_id = tweet.id_str
         # print(tweet.text)
         if 'media' in tweet.entities:

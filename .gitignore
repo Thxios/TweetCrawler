@@ -274,6 +274,7 @@ cython_debug/
 
 load/*
 seen/*
+no_git/*
 
 api_key.py
 targets.txt
