@@ -58,10 +58,9 @@ def get_media_list_by_name(user_name):
 
     all_medias = []
     cnt = 0
-    tweets = API.user_timeline(screen_name=user_name, count=200, include_rts=False)
-    for tweet in tweets:
-    # for tweet in tpy.Cursor(API.user_timeline, **feeds).items():
-        print(cnt, tweet.created_at, tweet.id_str)
+    # tweets = API.user_timeline(screen_name=user_name, count=200, include_rts=False)
+    # for tweet in tweets:
+    for tweet in tpy.Cursor(API.user_timeline, **feeds).items():
         tweet_id = tweet.id_str
         # print(tweet.text)
         if 'media' in tweet.entities:
