@@ -19,7 +19,7 @@ auth.set_access_token(K.ACCESS_TOKEN, K.ACCESS_TOKEN_SECRET)
 API = tpy.API(auth)
 
 _seen_dir = 'seen/'
-_save_media_dir = 'load/'
+_save_media_dir = 'tweet_load/'
 
 
 def get_media_list_by_name(user_name):
@@ -62,6 +62,8 @@ def get_media_list_by_name(user_name):
     # for tweet in tweets:
     for tweet in tpy.Cursor(API.user_timeline, **feeds).items():
         tweet_id = tweet.id_str
+        # print(tweet_id)
+        # print(cnt)
         # print(tweet.text)
         if 'media' in tweet.entities:
             medias = tweet.extended_entities['media']
@@ -83,8 +85,18 @@ def get_media_list_by_name(user_name):
                                 mx_bitrate = int(variant['bitrate'])
                                 url = variant['url']
 
+                elif media_type == 'animated_gif':
+                    mx_bitrate = -1
+                    for variant in media['video_info']['variants']:
+                        if 'bitrate' in variant:
+                            if variant['bitrate'] > mx_bitrate:
+                                mx_bitrate = int(variant['bitrate'])
+                                url = variant['url']
+                    media_type = 'gif  '
+
                 else:
                     print('unexpected media type:', media_type)
+                    print(tweet.extended_entities['media'])
 
                 if url:
                     print('{: 4d}  {}  {}  {}'.format(cnt, tweet.id_str, media_type, url))

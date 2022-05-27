@@ -272,9 +272,10 @@ cython_debug/
 
 
 
-load/*
+tweet_load/*
 seen/*
 no_git/*
+kemono_load/*
 
 api_key.py
 targets.txt
