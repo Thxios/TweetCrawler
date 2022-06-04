@@ -276,6 +276,7 @@ tweet_load/*
 seen/*
 no_git/*
 kemono_load/*
+kemono/targets.txt
 
 api_key.py
 targets.txt

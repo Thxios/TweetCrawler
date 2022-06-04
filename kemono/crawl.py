@@ -1,4 +1,10 @@
 
+import os
+import re
+import sys
+import tqdm
+import random as rd
+
 from selenium import webdriver
 from selenium.webdriver.chrome.webdriver import WebDriver
 from selenium.webdriver.chrome.options import Options
@@ -10,7 +16,8 @@ from urllib import request, error
 from time import sleep
 from datetime import datetime
 
-
+import ssl
+ssl._create_default_https_context = ssl._create_unverified_context
 
 
 def log(*args):
@@ -77,7 +84,7 @@ def find_contents_in_article(driver: WebDriver, article_url):
 
     driver.get(article_url)
     driver.implicitly_wait(5)
-    sleep(3)
+    sleep(1.5)
 
     main = driver.find_element_by_tag_name('main')
     posts = main.find_elements_by_class_name('post__thumbnail')
@@ -93,8 +100,35 @@ def find_contents_in_article(driver: WebDriver, article_url):
     return post_url
 
 
-def collect_files_from_url(file_urls):
-    pass
+def load_files_from_url(file_urls, save_dir):
+    log(f'saving {len(file_urls)} files to {save_dir}')
+    os.makedirs(save_dir, exist_ok=True)
+    passed_cnt = 0
+
+    for file_url in tqdm.tqdm(file_urls, file=sys.stdout):
+        file_name = get_filename_from_url(file_url)
+        file_path = os.path.join(save_dir, file_name)
+
+        # request.urlretrieve(file_url, file_path)
+        if not os.path.exists(file_path):
+            try:
+                request.urlretrieve(file_url, file_path)
+            except error.URLError:
+                passed_cnt += 1
+                log('passed', file_url)
+
+    log(f'saved {len(file_urls)-passed_cnt}/{len(file_urls)} files\n')
+
+
+def get_filename_from_url(file_url):
+    p = re.compile('[0-9a-zA-z_-]+[.][\w]+')
+    try:
+        res = p.findall(file_url)[-1]
+    except IndexError:
+        print('error', file_url)
+        res = '{:04d}'.format(rd.randint(0, 9999))
+        print('generate random name', res)
+    return res
 
 
 ops = Options()
@@ -105,21 +139,29 @@ ops = Options()
 capa = DesiredCapabilities.CHROME
 capa['pageLoadStrategy'] = 'none'
 
-target_artist_url = 'https://kemono.party/fanbox/user/59275588'
-driver_path = '../chromedriver/chromedriver.exe'
-save_path = ''
+with open('targets.txt', 'r') as f:
+    usr_all = list(map(lambda s: s.strip(), f.readlines()))
+idx = 1
 
-sample_article = 'https://kemono.party/fanbox/user/59275588/post/3847980'
+save_artist_name, target_artist_url = usr_all[idx-1].split()
+driver_path = '../chromedriver/chromedriver.exe'
+save_base_path = '../kemono_load/'
+save_path = os.path.join(save_base_path, save_artist_name)
 
 
 if __name__ == '__main__':
     main_driver = webdriver.Chrome(driver_path, options=ops, desired_capabilities=capa)
 
-    # article_urls = find_all_article_urls(main_driver, target_artist_url, 1)
-    # for url in article_urls:
-    #     find_contents_in_article(main_driver, url)
+    article_urls = find_all_article_urls(main_driver, target_artist_url)
 
     image_urls = []
-    find_contents_in_article(main_driver, sample_article)
+    for url in article_urls:
+        content_urls = find_contents_in_article(main_driver, url)
+        image_urls.extend(content_urls)
+
+    # image_urls.extend(find_contents_in_article(main_driver, sample_article))
+    main_driver.quit()
+
+    load_files_from_url(image_urls, save_path)
 
 
